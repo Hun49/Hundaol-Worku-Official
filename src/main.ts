@@ -1,3 +1,34 @@
+// Global helper for credential image fallbacks to avoid quote hell in HTML attributes
+(window as any).handleCredentialImageError = function(img: HTMLImageElement, fallbacksJson: string) {
+  if (!img.dataset.attempt) img.dataset.attempt = '0';
+  const attempt = parseInt(img.dataset.attempt, 10);
+  let fallbacks: string[] = [];
+  try {
+    fallbacks = JSON.parse(fallbacksJson.replace(/'/g, '"'));
+  } catch (e) {
+    console.error('Failed to parse fallbacks:', e);
+  }
+
+  if (attempt < fallbacks.length) {
+    console.warn(`Image load failed, trying fallback ${attempt + 1}:`, fallbacks[attempt]);
+    img.dataset.attempt = (attempt + 1).toString();
+    // Add cache buster to fallbacks too
+    const fallbackUrl = fallbacks[attempt];
+    img.src = fallbackUrl.includes('?') ? `${fallbackUrl}&retry=${attempt}` : `${fallbackUrl}?retry=${attempt}`;
+  } else {
+    img.onerror = null;
+    const container = img.parentElement;
+    if (container) {
+      container.innerHTML = `
+        <div style="padding: 40px; text-align: center; color: #94a3b8; background: #0c0f16; width: 100%;">
+          <p style="margin: 0; font-size: 14px;">Preview Unavailable</p>
+          <p style="margin: 8px 0 0; font-size: 10px; opacity: 0.5; word-break: break-all;">${img.src.split('?')[0]}</p>
+        </div>
+      `;
+    }
+  }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   const currentPath = window.location.pathname;
 
@@ -783,15 +814,13 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log('Credential Data found:', data);
       let credHtml = '';
       if (data && data.image) {
-        // Resolve absolute URL based on the current origin to ensure reliable pathing
-        const origin = window.location.origin;
-        const mainUrl = data.image.startsWith('http') ? data.image : (origin + (data.image.startsWith('/') ? '' : '/') + data.image);
+        // Use a simple cache buster to bypass potential 206 Partial Content/Range request issues on Vercel
+        const cacheBuster = `cv=${Date.now()}`;
+        const mainUrl = data.image.includes('?') ? `${data.image}&${cacheBuster}` : `${data.image}?${cacheBuster}`;
         
-        // Prepare fallbacks as absolute URLs
-        const fallbacks = (data.fallbacks || []).map(f => {
-          return f.startsWith('http') ? f : (origin + (f.startsWith('/') ? '' : '/') + f);
-        });
-        const fallbacksStr = JSON.stringify(fallbacks);
+        // Prepare fallbacks
+        const fallbacks = data.fallbacks || [];
+        const fallbacksStr = JSON.stringify(fallbacks).replace(/"/g, "'");
 
         credHtml = `
           <div class="certificate-image-modal-content" style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; gap: 16px;">
@@ -802,35 +831,18 @@ document.addEventListener('DOMContentLoaded', () => {
                   <span style="font-family: var(--font-mono); font-size: 0.65rem; color: #14b8a6; font-weight: 700; letter-spacing: 0.12em; display: block; text-transform: uppercase;">Original Credential Document</span>
                   <span style="font-size: 0.95rem; color: #fff; font-weight: 700; letter-spacing: -0.01em;">${data.title}</span>
                 </div>
-                <span style="font-family: var(--font-mono); font-size: 0.65rem; color: #14b8a6; background: rgba(20,184,166,0.1); border: 1px solid rgba(20,184,166,0.15); padding: 3px 8px; border-radius: 4px; font-weight: 600;">${data.verificationCode}</span>
+                ${data.verificationCode ? `<span style="font-family: var(--font-mono); font-size: 0.65rem; color: #14b8a6; background: rgba(20,184,166,0.1); border: 1px solid rgba(20,184,166,0.15); padding: 3px 8px; border-radius: 4px; font-weight: 600;">${data.verificationCode}</span>` : ''}
               </div>
 
-              <div style="position: relative; width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.05); background: #0c0f16; display: flex; justify-content: center; align-items: center;">
+              <div style="position: relative; width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.05); background: #0c0f16; display: flex; justify-content: center; align-items: center; min-height: 200px;">
                 <img src="${mainUrl}" 
                      alt="${data.title}" 
-                     crossorigin="anonymous"
-                     referrerpolicy="no-referrer"
-                     onerror="
-                       (function(img) {
-                         if (!img.dataset.attempt) img.dataset.attempt = '0';
-                         var att = parseInt(img.dataset.attempt, 10);
-                         var urls = ${fallbacksStr.replace(/"/g, "'")};
-                         console.warn('Image Load Failed, trying fallback:', att, urls[att]);
-                         if (att < urls.length) {
-                           img.dataset.attempt = (att + 1).toString();
-                           img.src = urls[att];
-                         } else {
-                           img.onerror = null;
-                           img.style.display = 'none';
-                           img.parentElement.innerHTML = '<div style=\'padding: 40px; text-align: center; color: #94a3b8;\'><p>Document preview unavailable</p><p style=\'font-size: 10px; opacity: 0.5; margin-top: 8px; word-break: break-all;\'>' + img.src + '</p></div>';
-                         }
-                       })(this);
-                     "
+                     onerror="window.handleCredentialImageError(this, '${fallbacksStr}')"
                      style="width: 100%; height: auto; display: block; object-fit: contain; max-height: 75vh; border-radius: 6px;" />
               </div>
 
               <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06);">
-                <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 500;">Conferred: ${data.period || ''}</span>
+                 <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 500;">Conferred: ${data.period || ''}</span>
               </div>
 
             </div>
