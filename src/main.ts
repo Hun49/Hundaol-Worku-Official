@@ -1,33 +1,34 @@
-// Global helper for credential image fallbacks to avoid quote hell in HTML attributes
-(window as any).handleCredentialImageError = function(img: HTMLImageElement, fallbacksJson: string) {
-  if (!img.dataset.attempt) img.dataset.attempt = '0';
-  const attempt = parseInt(img.dataset.attempt, 10);
-  let fallbacks: string[] = [];
-  try {
-    fallbacks = JSON.parse(fallbacksJson.replace(/'/g, '"'));
-  } catch (e) {
-    console.error('Failed to parse fallbacks:', e);
-  }
+// Robust internal Promise-based credential image loader
 
-  if (attempt < fallbacks.length) {
-    console.warn(`Image load failed, trying fallback ${attempt + 1}:`, fallbacks[attempt]);
-    img.dataset.attempt = (attempt + 1).toString();
-    // Add cache buster to fallbacks too
-    const fallbackUrl = fallbacks[attempt];
-    img.src = fallbackUrl.includes('?') ? `${fallbackUrl}&retry=${attempt}` : `${fallbackUrl}?retry=${attempt}`;
-  } else {
-    img.onerror = null;
-    const container = img.parentElement;
-    if (container) {
-      container.innerHTML = `
-        <div style="padding: 40px; text-align: center; color: #94a3b8; background: #0c0f16; width: 100%;">
-          <p style="margin: 0; font-size: 14px;">Preview Unavailable</p>
-          <p style="margin: 8px 0 0; font-size: 10px; opacity: 0.5; word-break: break-all;">${img.src.split('?')[0]}</p>
-        </div>
-      `;
+function normalizeImagePath(path: string): string {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  // Ensure starts with / and no double slashes
+  const normalized = `/${path.replace(/^\/+/, '')}`;
+  return normalized.replace(/\/+/g, '/');
+}
+
+async function loadCredentialImage(primary: string, fallbacks: string[] = []): Promise<string> {
+  const sources = [
+    normalizeImagePath(primary),
+    ...(fallbacks || []).map(normalizeImagePath)
+  ].filter(Boolean);
+
+  for (const src of sources) {
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve();
+        image.onerror = () => reject();
+        image.src = src;
+      });
+      return src;
+    } catch {
+      console.warn(`Credential image load failed for: ${src}, trying next...`);
     }
   }
-};
+  throw new Error("All image sources failed to load");
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   const currentPath = window.location.pathname;
@@ -662,7 +663,7 @@ document.addEventListener('DOMContentLoaded', () => {
   `;
 
   // Standard Reusable Modal Popup Controller
-  function createAndShowModal(htmlContent: string) {
+  function createAndShowModal(htmlContent: string): HTMLElement {
     // Backdrop
     const backdrop = document.createElement('div');
     backdrop.className = 'modal-backdrop';
@@ -721,6 +722,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
     document.addEventListener('keydown', escListener);
+
+    return backdrop;
   }
 
   function destroyModal(backdrop: HTMLElement) {
@@ -812,17 +815,9 @@ document.addEventListener('DOMContentLoaded', () => {
       
       const data = credentialsData[credId];
       console.log('Credential Data found:', data);
-      let credHtml = '';
+      
       if (data && data.image) {
-        // Use a simple cache buster to bypass potential 206 Partial Content/Range request issues on Vercel
-        const cacheBuster = `cv=${Date.now()}`;
-        const mainUrl = data.image.includes('?') ? `${data.image}&${cacheBuster}` : `${data.image}?${cacheBuster}`;
-        
-        // Prepare fallbacks
-        const fallbacks = data.fallbacks || [];
-        const fallbacksStr = JSON.stringify(fallbacks).replace(/"/g, "'");
-
-        credHtml = `
+        const credHtml = `
           <div class="certificate-image-modal-content" style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; gap: 16px;">
             <div class="glass-certificate-container" style="position: relative; width: 100%; padding: 16px; border-radius: 14px; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.05); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); overflow: hidden; display: flex; flex-direction: column; align-items: center;">
               
@@ -834,22 +829,54 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${data.verificationCode ? `<span style="font-family: var(--font-mono); font-size: 0.65rem; color: #14b8a6; background: rgba(20,184,166,0.1); border: 1px solid rgba(20,184,166,0.15); padding: 3px 8px; border-radius: 4px; font-weight: 600;">${data.verificationCode}</span>` : ''}
               </div>
 
-              <div style="position: relative; width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.05); background: #0c0f16; display: flex; justify-content: center; align-items: center; min-height: 200px;">
-                <img src="${mainUrl}" 
-                     alt="${data.title}" 
-                     onerror="window.handleCredentialImageError(this, '${fallbacksStr}')"
-                     style="width: 100%; height: auto; display: block; object-fit: contain; max-height: 75vh; border-radius: 6px;" />
+              <div id="credential-img-slot" style="position: relative; width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.05); background: #0c0f16; display: flex; justify-content: center; align-items: center; min-height: 240px;">
+                <div style="color: #94a3b8; font-size: 0.85rem; display: flex; flex-direction: column; align-items: center; gap: 12px;">
+                  <div class="loader-spinner" style="border: 2px solid rgba(20,184,166,0.1); border-top: 2px solid #14b8a6; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite;"></div>
+                  <span>Loading credential...</span>
+                </div>
               </div>
 
               <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06);">
                  <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 500;">Conferred: ${data.period || ''}</span>
               </div>
-
             </div>
           </div>
         `;
+
+        const modal = createAndShowModal(credHtml);
+        const slot = modal.querySelector('#credential-img-slot') as HTMLElement;
+        
+        if (slot) {
+          loadCredentialImage(data.image, data.fallbacks || []).then((finalSrc) => {
+            slot.innerHTML = '';
+            const img = document.createElement('img');
+            img.src = finalSrc;
+            img.alt = data.title;
+            img.style.width = '100%';
+            img.style.height = 'auto';
+            img.style.display = 'block';
+            img.style.objectFit = 'contain';
+            img.style.maxHeight = '75vh';
+            img.style.borderRadius = '6px';
+            img.style.opacity = '0';
+            img.style.transition = 'opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+            
+            slot.appendChild(img);
+            requestAnimationFrame(() => {
+              img.style.opacity = '1';
+            });
+          }).catch((err) => {
+            console.error(err);
+            slot.innerHTML = `
+              <div style="padding: 40px 20px; text-align: center; color: #f43f5e; width: 100%; display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: center;">
+                <p style="margin: 0; font-size: 15px; font-weight: 600; color: #ef4444;">Preview unavailable</p>
+                <p style="margin: 0; font-size: 13px; color: #94a3b8; font-weight: 400;">Image could not be loaded.</p>
+              </div>
+            `;
+          });
+        }
       } else {
-        credHtml = `
+        const credHtml = `
           <div class="certified-image-placeholder-modal" style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; min-height: 200px;">
             <div class="digital-certificate-card" style="width: 100%; border: 1.5px dashed rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 48px 24px; background: rgba(15, 23, 42, 0.6); text-align: center; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;">
               <h3 style="font-size: 1.1rem; font-weight: 700; color: #f1f5f9; margin: 0;">${data.title}</h3>
@@ -857,9 +884,8 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </div>
         `;
+        createAndShowModal(credHtml);
       }
-      
-      createAndShowModal(credHtml);
     }
   });
 
