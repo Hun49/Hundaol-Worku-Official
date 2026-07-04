@@ -450,37 +450,43 @@ document.addEventListener('DOMContentLoaded', () => {
       title: 'Grade 11-12 completion Certificate',
       period: 'Completed: 2020',
       verificationCode: 'GORO-PREP-2020-G1112',
-      image: '/credentials/grade_11n12.jpg'
+      image: '/credentials/grade_11n12.jpg',
+      fallbacks: ['/credentials/grade_11n12.png', '/credentials/grade_11_n_12.jpg']
     },
     'grade-11-12-c2': {
       title: 'University Entrance Exam certificate',
       period: 'Completed: 2020',
       verificationCode: 'ETH-ENTRANCE-2020-EE',
-      image: '/credentials/entrance_exam.jpg'
+      image: '/credentials/entrance_exam.jpg',
+      fallbacks: ['/credentials/entrance_exam.png', '/credentials/entrance-exam.jpg']
     },
     'grade-9-10-c1': {
       title: 'Grade 9-10 completion Certificate',
       period: 'Completed: 2018',
       verificationCode: 'SEC-GRAD-2018-02A',
-      image: '/credentials/grade_9n10.jpg'
+      image: '/credentials/grade_9n10.jpg',
+      fallbacks: ['/credentials/grade_9n10.png', '/credentials/grade-9-10.jpg']
     },
     'grade-9-10-c2': {
       title: 'Matric Exam',
       period: 'Completed: 2018',
       verificationCode: 'SEC-COMP-2018-05D',
-      image: '/credentials/matric_exam.jpg'
+      image: '/credentials/matric_exam.jpg',
+      fallbacks: ['/credentials/matric_exam.png', '/credentials/matric.jpg']
     },
     'grade-8-c1': {
       title: 'Grade 8 Ministry Exam',
       period: 'Completed: Grade 8 (Ministry Examination)',
       verificationCode: 'PRIM-GRAD-2016-01F',
-      image: '/credentials/grade8.jpg'
+      image: '/credentials/grade8.jpg',
+      fallbacks: ['/credentials/grade8.png', '/credentials/grade_8.jpg']
     },
     'tme-arduino-cert': {
       title: 'Electronics & Arduino Training Program Certificate',
       period: 'Training Program Completion',
       verificationCode: 'TME-ARDUINO-CERT-2025',
-      image: '/credentials/tme_certificate.jpg'
+      image: '/credentials/tme_certificate.jpg',
+      fallbacks: ['/credentials/tme_certificate.png', '/credentials/tme.jpg']
     }
   };
 
@@ -777,13 +783,16 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log('Credential Data found:', data);
       let credHtml = '';
       if (data && data.image) {
-        // Ensure the path is correctly resolved for production environments
-        // We use a relative path logic + cache busting timestamp
-        const cacheBuster = `v=${Date.now()}`;
-        const finalUrl = data.image.startsWith('/') 
-          ? `${data.image}?${cacheBuster}` 
-          : `./${data.image}?${cacheBuster}`;
-          
+        // Resolve absolute URL based on the current origin to ensure reliable pathing
+        const origin = window.location.origin;
+        const mainUrl = data.image.startsWith('http') ? data.image : (origin + (data.image.startsWith('/') ? '' : '/') + data.image);
+        
+        // Prepare fallbacks as absolute URLs
+        const fallbacks = (data.fallbacks || []).map(f => {
+          return f.startsWith('http') ? f : (origin + (f.startsWith('/') ? '' : '/') + f);
+        });
+        const fallbacksStr = JSON.stringify(fallbacks);
+
         credHtml = `
           <div class="certificate-image-modal-content" style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; gap: 16px;">
             <div class="glass-certificate-container" style="position: relative; width: 100%; padding: 16px; border-radius: 14px; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.05); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); overflow: hidden; display: flex; flex-direction: column; align-items: center;">
@@ -797,8 +806,26 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
 
               <div style="position: relative; width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.05); background: #0c0f16; display: flex; justify-content: center; align-items: center;">
-                <img src="${finalUrl}" 
+                <img src="${mainUrl}" 
                      alt="${data.title}" 
+                     crossorigin="anonymous"
+                     referrerpolicy="no-referrer"
+                     onerror="
+                       (function(img) {
+                         if (!img.dataset.attempt) img.dataset.attempt = '0';
+                         var att = parseInt(img.dataset.attempt, 10);
+                         var urls = ${fallbacksStr.replace(/"/g, "'")};
+                         console.warn('Image Load Failed, trying fallback:', att, urls[att]);
+                         if (att < urls.length) {
+                           img.dataset.attempt = (att + 1).toString();
+                           img.src = urls[att];
+                         } else {
+                           img.onerror = null;
+                           img.style.display = 'none';
+                           img.parentElement.innerHTML = '<div style=\'padding: 40px; text-align: center; color: #94a3b8;\'><p>Document preview unavailable</p><p style=\'font-size: 10px; opacity: 0.5; margin-top: 8px; word-break: break-all;\'>' + img.src + '</p></div>';
+                         }
+                       })(this);
+                     "
                      style="width: 100%; height: auto; display: block; object-fit: contain; max-height: 75vh; border-radius: 6px;" />
               </div>
 
