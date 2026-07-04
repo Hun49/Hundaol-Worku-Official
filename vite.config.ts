@@ -3,12 +3,19 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
+    base: '/',
+    
+    publicDir: 'public', // 👈 FORCE THIS
+
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
       },
     },
+
     build: {
+      outDir: 'dist', // 👈 ENSURE CLEAN OUTPUT
+
       rollupOptions: {
         input: {
           main: path.resolve(__dirname, 'index.html'),
@@ -20,6 +27,7 @@ export default defineConfig(() => {
         },
       },
     },
+
     server: {
       hmr: process.env.DISABLE_HMR !== 'true',
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
