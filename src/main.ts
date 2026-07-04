@@ -450,71 +450,37 @@ document.addEventListener('DOMContentLoaded', () => {
       title: 'Grade 11-12 completion Certificate',
       period: 'Completed: 2020',
       verificationCode: 'GORO-PREP-2020-G1112',
-      image: '/credentials/grade_11_n_12.png',
-      fallbacks: [
-        '/credentials/grade_11_n_12.png',
-        '/credentials/grade_11_12.png',
-        '/credentials/grade-11-12.png',
-        '/credentials/grade_11_12.jpg',
-        '/credentials/goro_transcript.jpg'
-      ]
+      image: '/credentials/grade_11n12.jpg'
     },
     'grade-11-12-c2': {
       title: 'University Entrance Exam certificate',
       period: 'Completed: 2020',
       verificationCode: 'ETH-ENTRANCE-2020-EE',
-      image: '/credentials/Entrance exam.png',
-      fallbacks: [
-        '/credentials/Entrance exam.png',
-        '/credentials/entrance_exam.png',
-        '/credentials/entrance_exam.jpg',
-        '/credentials/entrance-exam.png',
-        '/credentials/entrance.png'
-      ]
+      image: '/credentials/entrance_exam.jpg'
     },
     'grade-9-10-c1': {
       title: 'Grade 9-10 completion Certificate',
       period: 'Completed: 2018',
       verificationCode: 'SEC-GRAD-2018-02A',
-      image: '/credentials/grade 9 n 10.jpg',
-      fallbacks: [
-        '/credentials/grade 9 n 10.jpg',
-        '/credentials/grade_9_n_10.jpg'
-      ]
+      image: '/credentials/grade_9n10.jpg'
     },
     'grade-9-10-c2': {
       title: 'Matric Exam',
       period: 'Completed: 2018',
       verificationCode: 'SEC-COMP-2018-05D',
-      image: '/credentials/Matric.png',
-      fallbacks: [
-        '/credentials/Matric.png',
-        '/credentials/matric.png',
-        '/credentials/TME.png',
-        '/credentials/tme.png'
-      ]
+      image: '/credentials/matric_exam.jpg'
     },
     'grade-8-c1': {
       title: 'Grade 8 Ministry Exam',
       period: 'Completed: Grade 8 (Ministry Examination)',
       verificationCode: 'PRIM-GRAD-2016-01F',
-      image: '/credentials/grade 8.png',
-      fallbacks: [
-        '/credentials/grade 8.png',
-        '/credentials/grade_8.png'
-      ]
+      image: '/credentials/grade8.jpg'
     },
     'tme-arduino-cert': {
       title: 'Electronics & Arduino Training Program Certificate',
       period: 'Training Program Completion',
       verificationCode: 'TME-ARDUINO-CERT-2025',
-      image: '/credentials/TME.png',
-      fallbacks: [
-        '/credentials/TME.png',
-        '/credentials/tme.png',
-        '/credentials/TME_certificate.png',
-        '/credentials/tme_certificate.png'
-      ]
+      image: '/credentials/tme_certificate.jpg'
     }
   };
 
