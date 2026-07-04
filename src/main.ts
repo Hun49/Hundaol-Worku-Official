@@ -1,34 +1,5 @@
-// Robust internal Promise-based credential image loader
+// Simplified browser-based credential image viewer
 
-function normalizeImagePath(path: string): string {
-  if (!path) return '';
-  if (path.startsWith('http')) return path;
-  // Ensure starts with / and no double slashes
-  const normalized = `/${path.replace(/^\/+/, '')}`;
-  return normalized.replace(/\/+/g, '/');
-}
-
-async function loadCredentialImage(primary: string, fallbacks: string[] = []): Promise<string> {
-  const sources = [
-    normalizeImagePath(primary),
-    ...(fallbacks || []).map(normalizeImagePath)
-  ].filter(Boolean);
-
-  for (const src of sources) {
-    try {
-      await new Promise<void>((resolve, reject) => {
-        const image = new Image();
-        image.onload = () => resolve();
-        image.onerror = () => reject();
-        image.src = src;
-      });
-      return src;
-    } catch {
-      console.warn(`Credential image load failed for: ${src}, trying next...`);
-    }
-  }
-  throw new Error("All image sources failed to load");
-}
 
 document.addEventListener('DOMContentLoaded', () => {
   const currentPath = window.location.pathname;
@@ -847,33 +818,37 @@ document.addEventListener('DOMContentLoaded', () => {
         const slot = modal.querySelector('#credential-img-slot') as HTMLElement;
         
         if (slot) {
-          loadCredentialImage(data.image, data.fallbacks || []).then((finalSrc) => {
+          const img = document.createElement('img');
+          img.alt = data.title;
+          img.referrerPolicy = 'no-referrer';
+          img.style.width = '100%';
+          img.style.height = 'auto';
+          img.style.display = 'block';
+          img.style.objectFit = 'contain';
+          img.style.maxHeight = '75vh';
+          img.style.borderRadius = '6px';
+          img.style.opacity = '0';
+          img.style.transition = 'opacity 0.3s ease';
+          
+          img.onload = () => {
             slot.innerHTML = '';
-            const img = document.createElement('img');
-            img.src = finalSrc;
-            img.alt = data.title;
-            img.style.width = '100%';
-            img.style.height = 'auto';
-            img.style.display = 'block';
-            img.style.objectFit = 'contain';
-            img.style.maxHeight = '75vh';
-            img.style.borderRadius = '6px';
-            img.style.opacity = '0';
-            img.style.transition = 'opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
-            
             slot.appendChild(img);
             requestAnimationFrame(() => {
               img.style.opacity = '1';
             });
-          }).catch((err) => {
-            console.error(err);
+          };
+          
+          img.onerror = () => {
             slot.innerHTML = `
-              <div style="padding: 40px 20px; text-align: center; color: #f43f5e; width: 100%; display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: center;">
+              <div style="padding: 40px 20px; text-align: center; color: #ef4444; width: 100%; display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: center;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 4px; color: #f43f5e;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
                 <p style="margin: 0; font-size: 15px; font-weight: 600; color: #ef4444;">Preview unavailable</p>
-                <p style="margin: 0; font-size: 13px; color: #94a3b8; font-weight: 400;">Image could not be loaded.</p>
+                <p style="margin: 0; font-size: 13px; color: #94a3b8;">Image could not be loaded.</p>
               </div>
             `;
-          });
+          };
+          
+          img.src = data.image;
         }
       } else {
         const credHtml = `
