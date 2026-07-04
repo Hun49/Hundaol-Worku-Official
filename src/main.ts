@@ -777,6 +777,13 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log('Credential Data found:', data);
       let credHtml = '';
       if (data && data.image) {
+        // Ensure the path is correctly resolved for production environments
+        // We use a relative path logic + cache busting timestamp
+        const cacheBuster = `v=${Date.now()}`;
+        const finalUrl = data.image.startsWith('/') 
+          ? `${data.image}?${cacheBuster}` 
+          : `./${data.image}?${cacheBuster}`;
+          
         credHtml = `
           <div class="certificate-image-modal-content" style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; gap: 16px;">
             <div class="glass-certificate-container" style="position: relative; width: 100%; padding: 16px; border-radius: 14px; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.05); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); overflow: hidden; display: flex; flex-direction: column; align-items: center;">
@@ -790,10 +797,8 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
 
               <div style="position: relative; width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.05); background: #0c0f16; display: flex; justify-content: center; align-items: center;">
-                <img src="${data.image}" 
+                <img src="${finalUrl}" 
                      alt="${data.title}" 
-                     onload="console.log('Image Loaded Success:', this.src)"
-                     onerror="console.error('Image Load Failed:', this.src)"
                      style="width: 100%; height: auto; display: block; object-fit: contain; max-height: 75vh; border-radius: 6px;" />
               </div>
 
