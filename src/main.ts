@@ -872,219 +872,45 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Resume PDF Download Button Triggering
+  // Resume PDF Download Button Triggering - standard HTML download with Blob fetch fallback to bypass caches
   const downloadResumeBtn = document.getElementById('pdf-download-action-btn');
   if (downloadResumeBtn) {
-    downloadResumeBtn.addEventListener('click', (e) => {
+    downloadResumeBtn.addEventListener('click', async (e) => {
       e.preventDefault();
-      
-      const element = document.createElement('div');
-      element.style.fontFamily = "system-ui, -apple-system, sans-serif";
-      element.style.color = "#1e293b";
-      element.style.padding = "40px 50px";
-      element.style.backgroundColor = "#ffffff";
-      element.style.width = "720px";
-      element.style.margin = "0 auto";
-      
-      element.innerHTML = `
-        <div style="line-height: 1.5; color: #1e293b;">
-          <!-- Header -->
-          <header style="text-align: center; border-bottom: 2px solid #0f766e; padding-bottom: 12px; margin-bottom: 18px;">
-            <h1 style="font-size: 28px; font-weight: 800; color: #0f172a; margin: 0 0 4px 0; letter-spacing: -0.03em;">Hundaol Worku</h1>
-            <div style="font-size: 11px; font-weight: 700; color: #0f766e; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 8px;">Software Developer & Engineering Student</div>
-            <div style="display: flex; justify-content: center; gap: 12px; font-size: 11px; color: #475569; flex-wrap: wrap; font-weight: 500;">
-              <span>hundaolworku1949@gmail.com</span>
-              <span>•</span>
-              <span>Adama, Ethiopia</span>
-              <span>•</span>
-              <span>github.com/Hun49</span>
-            </div>
-          </header>
-
-          <!-- Summary -->
-          <section style="margin-bottom: 18px;">
-            <h2 style="font-size: 11px; font-weight: 700; color: #0f766e; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; margin: 0 0 6px 0;">Professional Summary</h2>
-            <p style="font-size: 10.5px; color: #334155; margin: 0; text-align: justify; line-height: 1.5;">
-              A dedicated and analytical final-year Software Engineering student at Adama Science and Technology University (ASTU) with graduation expected in 2027. Skilled in full-stack web and mobile development, embedded hardware architectures, and digital systems integration. Adept at managing structured business databases, maintaining operational throughput, and creating intuitive user interfaces. Fluent in English, Amharic, and Afan Oromo.
-            </p>
-          </section>
-
-          <!-- Education -->
-          <section style="margin-bottom: 18px;">
-            <h2 style="font-size: 11px; font-weight: 700; color: #0f766e; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; margin: 0 0 6px 0;">Education Background</h2>
-            
-            <div style="margin-bottom: 10px;">
-              <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; color: #0f172a; margin-bottom: 2px;">
-                <span>Adama Science and Technology University (ASTU)</span>
-                <span>2021 — Present</span>
-              </div>
-              <div style="font-size: 9.5px; font-weight: 600; color: #0f766e; margin-bottom: 3px;">B.Sc. in Software Engineering (Final Year, Expected Graduation: 2027)</div>
-              <p style="font-size: 10.5px; color: #334155; margin: 0; line-height: 1.4;">Selected coursework includes Operating Systems, Advanced Database Design, Algorithms, and HCI. Served as active Lead Student Developer at ASTU Software Engineering Club.</p>
-            </div>
-
-            <div style="margin-bottom: 8px;">
-              <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; color: #0f172a; margin-bottom: 2px;">
-                <span>Goro Preparatory School</span>
-                <span>Completed: 2020</span>
-              </div>
-              <div style="font-size: 9.5px; font-weight: 500; color: #64748b;">Grade 11-12 College Preparatory Program</div>
-            </div>
-
-            <div style="margin-bottom: 8px;">
-              <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; color: #0f172a; margin-bottom: 2px;">
-                <span>Grade 9-10 Secondary Completion</span>
-                <span>Completed: 2018</span>
-              </div>
-              <div style="font-size: 9.5px; font-weight: 500; color: #64748b;">Ethiopian National General Secondary Curriculum</div>
-            </div>
-
-            <div>
-              <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; color: #0f172a; margin-bottom: 2px;">
-                <span>Adama No. 5 Elementary School</span>
-                <span>Completed: 2016</span>
-              </div>
-              <div style="font-size: 9.5px; font-weight: 500; color: #64748b;">Grade 8 National Ministry Examination</div>
-            </div>
-          </section>
-
-          <!-- Professional Experience -->
-          <section style="margin-bottom: 18px;">
-            <h2 style="font-size: 11px; font-weight: 700; color: #0f766e; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; margin: 0 0 6px 0;">Professional Experience & Training</h2>
-            
-            <div style="margin-bottom: 10px;">
-              <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; color: #0f172a; margin-bottom: 2px;">
-                <span>Data Encoder</span>
-                <span>2025 — 2026</span>
-              </div>
-              <div style="font-size: 9.5px; font-weight: 600; color: #475569; margin-bottom: 3px;">Private Company (Ethiopia)</div>
-              <p style="font-size: 10.5px; color: #334155; margin: 0; line-height: 1.4;">Accurately encoded, organized, and digitized core business records. Followed strict data management workflows and protocols within a structured corporate environment.</p>
-            </div>
-
-            <div>
-              <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; color: #0f172a; margin-bottom: 2px;">
-                <span>Electronics & Arduino Training Program</span>
-                <span>Certificate Program</span>
-              </div>
-              <div style="font-size: 9.5px; font-weight: 600; color: #475569; margin-bottom: 3px;">TME.eu – Introduction to Electronics & Arduino</div>
-              <p style="font-size: 10.5px; color: #334155; margin: 0; line-height: 1.4;">Successfully completed an introduction to microcontrollers, circuit layout schematics, physical sensors, and embedded systems programming in C/C++.</p>
-            </div>
-          </section>
-
-          <!-- Projects -->
-          <section style="margin-bottom: 18px;">
-            <h2 style="font-size: 11px; font-weight: 700; color: #0f766e; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; margin: 0 0 6px 0;">Software Projects Experience</h2>
-
-            <div style="margin-bottom: 6px;">
-              <div style="font-size: 11px; font-weight: 700; color: #0f172a; margin-bottom: 1px;">Inventory Management System (IMSO) <span style="font-size: 9px; font-weight: 500; color: #64748b;">| React, React Native, Node.js, SQLite</span></div>
-              <p style="font-size: 10.5px; color: #334155; margin: 0; line-height: 1.4;">A cross-platform stock logging system built to handle inventory balances and daily sale transactions cleanly.</p>
-            </div>
-
-            <div style="margin-bottom: 6px;">
-              <div style="font-size: 11px; font-weight: 700; color: #0f172a; margin-bottom: 1px;">HAGERE TECH SOLUTIONS Website <span style="font-size: 9px; font-weight: 500; color: #64748b;">| HTML, CSS, TypeScript</span></div>
-              <p style="font-size: 10.5px; color: #334155; margin: 0; line-height: 1.4;">Designed and deployed an early-stage startup corporate landing space with structured pages demonstrating services and goals.</p>
-            </div>
-
-            <div style="margin-bottom: 6px;">
-              <div style="font-size: 11px; font-weight: 700; color: #0f172a; margin-bottom: 1px;">Focus Session <span style="font-size: 9px; font-weight: 500; color: #64748b;">| Java Desktop (OOP)</span></div>
-              <p style="font-size: 10.5px; color: #334155; margin: 0; line-height: 1.4;">An academic desktop study aid including customizable focus timers, interactive flashcards, quizzes, and local student data records.</p>
-            </div>
-
-            <div style="margin-bottom: 6px;">
-              <div style="font-size: 11px; font-weight: 700; color: #0f172a; margin-bottom: 1px;">My Analytic <span style="font-size: 9px; font-weight: 500; color: #64748b;">| React Native, Android SDK</span></div>
-              <p style="font-size: 10.5px; color: #334155; margin: 0; line-height: 1.4;">Analyzed and graphed standard daily Android device interactions and app open intervals to support user health metrics.</p>
-            </div>
-
-            <div>
-              <div style="font-size: 11px; font-weight: 700; color: #0f172a; margin-bottom: 1px;">Location Tracker <span style="font-size: 9px; font-weight: 500; color: #64748b;">| JavaScript, Google Maps API</span></div>
-              <p style="font-size: 10.5px; color: #334155; margin: 0; line-height: 1.4;">Live map system mapping user clusters using coordinates and custom privacy toggle parameters.</p>
-            </div>
-          </section>
-
-          <!-- Technical Skills & Languages -->
-          <section style="margin-bottom: 18px;">
-            <h2 style="font-size: 11px; font-weight: 700; color: #0f766e; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; margin: 0 0 6px 0;">Technical Skills & Languages</h2>
-            <div style="display: flex; justify-content: space-between; font-size: 10px; color: #334155;">
-              <div style="flex: 1.2;">
-                <strong>Programming & Frontend:</strong> TypeScript, JavaScript, React, React Native, Java (OOP), HTML5, CSS3, Maps API
-              </div>
-              <div style="flex: 1; padding-left: 15px;">
-                <strong>Backend & Database:</strong> Node.js, Express, SQL, PostgreSQL, SQLite, Git, Docker, Figma
-              </div>
-              <div style="width: 140px; padding-left: 15px;">
-                <strong>Languages:</strong> English, Amharic, Afan Oromo
-              </div>
-            </div>
-          </section>
-
-          <!-- Credentials verification -->
-          <section style="page-break-inside: avoid;">
-            <h2 style="font-size: 11px; font-weight: 700; color: #0f766e; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; margin: 0 0 6px 0;">Academic Credentials & Verifications</h2>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; font-size: 9px; color: #475569;">
-              <div>• <strong>Grade 11-12 Certificate</strong>: GORO-PREP-2020-G1112</div>
-              <div>• <strong>University Entrance Exam</strong>: ETH-ENTRANCE-2020-EE</div>
-              <div>• <strong>Grade 9-10 Certificate</strong>: SEC-GRAD-2018-02A</div>
-              <div>• <strong>Matric Exam</strong>: SEC-COMP-2018-05D</div>
-              <div style="grid-column: span 2;">• <strong>Grade 8 Ministry Exam</strong>: PRIM-GRAD-2016-01F</div>
-            </div>
-          </section>
-        </div>
-      `;
-
-      const opt = {
-        margin:       [0.4, 0.4, 0.4, 0.4],
-        filename:     'Hundaol_Worku_Resume.pdf',
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
-        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-      };
-
-      // Append element to document body so html2canvas can measure layout coordinates accurately
-      element.style.position = 'absolute';
-      element.style.left = '-9999px';
-      element.style.top = '0';
-      document.body.appendChild(element);
-
-      const runHtml2Pdf = () => {
-        // @ts-ignore
-        if (typeof html2pdf !== 'undefined') {
-          // @ts-ignore
-          html2pdf().set(opt).from(element).save().then(() => {
-            element.remove();
-          }).catch((err: any) => {
-            console.error("PDF download failure:", err);
-            element.remove();
-          });
-        } else {
-          // If the script tag failed to load, inject the local script dynamically
-          const script = document.createElement('script');
-          script.src = "/assets/html2pdf.bundle.min.js";
-          script.onload = () => {
-            // @ts-ignore
-            if (typeof html2pdf !== 'undefined') {
-              // @ts-ignore
-              html2pdf().set(opt).from(element).save().then(() => {
-                element.remove();
-              }).catch((err: any) => {
-                console.error("PDF download failure:", err);
-                element.remove();
-              });
-            } else {
-              element.remove();
-              window.print();
-            }
-          };
-          script.onerror = () => {
-            element.remove();
-            window.print();
-          };
-          document.head.appendChild(script);
+      try {
+        // Fetch the file with cache control to ensure we get the fresh 985KB PDF
+        const response = await fetch('/Hundaol_Worku_CV_main.pdf', {
+          cache: 'no-store',
+          headers: {
+            'Pragma': 'no-cache',
+            'Cache-Control': 'no-cache'
+          }
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch the resume file.');
         }
-      };
-
-      runHtml2Pdf();
+        const blob = await response.blob();
+        const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(pdfBlob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Hundaol_Worku_CV_main.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error('Blob download failed, falling back to direct anchor:', err);
+        const fallbackA = document.createElement('a');
+        fallbackA.href = '/Hundaol_Worku_CV_main.pdf';
+        fallbackA.download = 'Hundaol_Worku_CV_main.pdf';
+        document.body.appendChild(fallbackA);
+        fallbackA.click();
+        document.body.removeChild(fallbackA);
+      }
     });
   }
-
   // ==========================================
   // 8. Custom Error Toasts & Click Handler
   // ==========================================
